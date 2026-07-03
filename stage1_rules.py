@@ -169,9 +169,9 @@ def _r_gesso(texto: str) -> str | None:
 def _r_tabica(texto: str) -> str | None:
     if "tabica" not in texto:
         return None
-    if re.search(r'tabica\s*(branca|\bb\b)', texto):
+    if re.search(r'tabicas?\s*(brancas?|\bb\b)', texto):
         return "tabica branca"
-    if re.search(r'tabica\s*(natural|\bn\b)', texto):
+    if re.search(r'tabicas?\s*(natura(?:l|is)|\bn\b)', texto):
         return "tabica natural"
     return "tabica"  # sem cor → vai gerar pergunta
 
@@ -217,6 +217,9 @@ def _extrair_lista(msg: str) -> dict:
         linha = linha.strip()
         if not linha:
             continue
+        # cabeçalhos soltos ("orçamento", "pedido"…) não são itens
+        if re.match(r'(?i)^(or[çc]amento|pedido|lista(\s+de\s+materiais)?)\s*$', linha):
+            continue
         qtd, resto = _extrair_quantidade(linha)
         low = resto.lower()
 
@@ -244,10 +247,24 @@ def _extrair_lista(msg: str) -> dict:
     }
 
 
+_RE_CLIENTE = re.compile(r'(?im)^\s*cliente[:\s]+(.+?)\s*$')
+
+
 def classificar(mensagem: str) -> dict:
+    # Extrai e remove a linha "Cliente Fulano" antes de classificar,
+    # para o nome não virar item no matcher.
+    cliente = ""
+    m = _RE_CLIENTE.search(mensagem)
+    if m:
+        cliente = m.group(1).strip()
+        mensagem = _RE_CLIENTE.sub("", mensagem)
+
     tipo = _detectar_tipo(mensagem)
     if tipo == "forro":
-        return _extrair_forro(mensagem)
-    if tipo == "parede":
-        return _extrair_parede(mensagem)
-    return _extrair_lista(mensagem)
+        out = _extrair_forro(mensagem)
+    elif tipo == "parede":
+        out = _extrair_parede(mensagem)
+    else:
+        out = _extrair_lista(mensagem)
+    out["cliente"] = cliente
+    return out
