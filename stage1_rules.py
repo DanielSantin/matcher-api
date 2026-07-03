@@ -130,13 +130,17 @@ def _r_chapa(texto: str) -> str | None:
 
 
 def _r_montante(texto: str) -> str | None:
-    m = re.search(r'montante\s*(\d+)', texto)
-    return f"montante {m.group(1)}" if m else None
+    if not re.search(r'\bmontantes?\b', texto):
+        return None
+    m = re.search(r'montantes?\s*(\d+)', texto)
+    return f"montante {m.group(1)}" if m else "montante 70"  # 70 = padrão sem espessura
 
 
 def _r_guia(texto: str) -> str | None:
+    if not re.search(r'\bguias?\b', texto):
+        return None
     m = re.search(r'guias?\s*(\d+)', texto)
-    return f"guia {m.group(1)}" if m else None
+    return f"guia {m.group(1)}" if m else "guia 70"  # 70 = padrão sem espessura
 
 
 def _r_parafuso(texto: str) -> str | list[str] | None:
