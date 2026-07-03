@@ -7,6 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 from matcher import match_lista
+from stage1_rules import classificar
 
 app = FastAPI(title="Matcher API", version="1.0")
 
@@ -28,6 +29,15 @@ class MatchRequest(BaseModel):
 def match(body: MatchRequest):
     resultados = match_lista(body.itens, body.catalogo, body.threshold)
     return {"itens": resultados}
+
+
+class Stage1Request(BaseModel):
+    mensagem: str
+
+
+@app.post("/stage1")
+def stage1(body: Stage1Request):
+    return classificar(body.mensagem)
 
 
 @app.get("/health")
